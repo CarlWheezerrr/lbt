@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lachlan's Buisness Tycoon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style id="customStyles"></style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Audio elements -->
+    <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+    <audio id="purchaseSound" src="https://assets.mixkit.co/active_storage/sfx/2580/2580-preview.mp3" preload="auto"></audio>
+    <audio id="errorSound" src="https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3" preload="auto"></audio>
+
+    <div id="game" class="container mx-auto px-4 py-8 max-w-6xl">
+        <div id="setup" class="text-center mb-8">
+            <h1 class="text-6xl font-bold mb-6 text-blue-400">Lachlan's Buisness Tycoon</h1>
+            <div id="nameInput" class="mb-8">
+                <input type="text" id="businessNameInput" placeholder="Enter your business name" class="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500 w-64">
+                <button onclick="setBusinessName()" class="ml-2 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg transition-colors">Start Empire</button>
+            </div>
+        </div>
+
+        <div id="mainGame" class="hidden">
+            <!-- Header Section -->
+            <div class="flex justify-between items-center mb-8 bg-gray-800 p-4 rounded-lg shadow-lg">
+                <div>
+                    <h2 id="businessNameDisplay" class="text-3xl font-bold text-blue-400"></h2>
+                    <p class="text-gray-400">Lachlan's Buisness Tycoon</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-2xl font-bold text-yellow-400 animate-pulse">
+                        <span id="cpsDisplay" class="text-sm">0 CPS</span><br>
+                        <span id="coinDisplay">0</span> 💰
+                    </div>
+                    <div id="clickArea" class="cursor-pointer bg-blue-500 hover:bg-blue-600 p-6 rounded-full shadow-lg transition-transform transform hover:scale-105 active:scale-95">
+                        <span class="text-2xl">💰</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Upgrades Section -->
+                <div class="lg:col-span-2">
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-4 text-blue-400">Business Upgrades</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="upgradesList"></div>
+                    </div>
+                </div>
+
+                <!-- Shop Section -->
+                <div>
+                    <div class="bg-gray-800 p-6 rounded-lg mb-6">
+                        <h3 class="text-2xl font-bold mb-4 text-blue-400">Customization Shop</h3>
+                        <div id="shopList" class="space-y-4"></div>
+                    </div>
+
+                    <!-- Gift Cards Section -->
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-4 text-blue-400">Gift Cards</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <input type="text" id="giftCodeInput" placeholder="Enter gift code" class="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500 w-full mb-2">
+                                <button onclick="redeemGiftCard()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg w-full transition-colors">Redeem</button>
+                            </div>
+                            <div id="adminPanel" class="hidden">
+                                <input type="number" id="giftAmountInput" value="100" min="1" class="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500 w-full mb-2">
+                                <button onclick="generateGiftCard()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg w-full transition-colors">Generate Gift Card</button>
+                                <p id="generatedCode" class="mt-2 text-center font-mono bg-gray-700 p-2 rounded"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="messageBox" class="fixed bottom-4 right-4 max-w-md"></div>
+        </div>
+    </div>
+
+    <script>
+        let businessName = '';
+        let coins = 0;
+        let giftCards = new Map();
+        let secretCode = '';
+        let customizations = {
+            backgroundColor: 'bg-gray-900',
+            textColor: 'text-white',
+            fontFamily: 'font-sans'
+        };
+
+        // Expanded upgrades list
+        let upgrades = [
+            // Passive Income Upgrades
+            { id: 'passive1', name: 'Intern', cost: 10, coinsPerSecond: 0.1, owned: 0, description: 'Hire an intern to generate 0.1 coins/sec' },
+            { id: 'passive2', name: 'Junior Employee', cost: 50, coinsPerSecond: 0.5, owned: 0, description: 'Hire a junior employee for 0.5 coins/sec' },
+            { id: 'passive3', name: 'Senior Employee', cost: 200, coinsPerSecond: 2, owned: 0, description: 'Hire a senior employee for 2 coins/sec' },
+            { id: 'passive4', name: 'Team Lead', cost: 1000, coinsPerSecond: 10, owned: 0, description: 'Hire a team lead for 10 coins/sec' },
+            { id: 'passive5', name: 'Department Manager', cost: 5000, coinsPerSecond: 50, owned: 0, description: 'Hire a manager for 50 coins/sec' },
+            { id: 'passive6', name: 'Regional Director', cost: 25000, coinsPerSecond: 250, owned: 0, description: 'Hire a director for 250 coins/sec' },
+            { id: 'passive7', name: 'CEO', cost: 100000, coinsPerSecond: 1000, owned: 0, description: 'Hire a CEO for 1000 coins/sec' },
+            
+            // Click Multiplier Upgrades
+            { id: 'click1', name: 'Basic Training', cost: 15, clickMultiplier: 2, owned: 0, description: 'Double click value' },
+            { id: 'click2', name: 'Advanced Training', cost: 100, clickMultiplier: 2, owned: 0, description: 'Double click value again' },
+            { id: 'click3', name: 'Expert Training', cost: 1000, clickMultiplier: 2, owned: 0, description: 'Double click value once more' },
+            { id: 'click4', name: 'Master Training', cost: 10000, clickMultiplier: 2, owned: 0, description: 'Double click value yet again' },
+            
+            // Business Expansion Upgrades
+            { id: 'expansion1', name: 'Small Office', cost: 500, coinsPerSecond: 5, clickMultiplier: 1.5, owned: 0, description: 'Get an office space' },
+            { id: 'expansion2', name: 'Office Building', cost: 5000, coinsPerSecond: 25, clickMultiplier: 2, owned: 0, description: 'Upgrade to a full building' },
+            { id: 'expansion3', name: 'Business Complex', cost: 50000, coinsPerSecond: 100, clickMultiplier: 3, owned: 0, description: 'Own a business complex' },
+            
+            // Technology Upgrades
+            { id: 'tech1', name: 'Basic Computers', cost: 200, clickMultiplier: 1.5, owned: 0, description: 'Upgrade office computers' },
+            { id: 'tech2', name: 'Server Infrastructure', cost: 2000, coinsPerSecond: 15, owned: 0, description: 'Install business servers' },
+            { id: 'tech3', name: 'AI Integration', cost: 20000, clickMultiplier: 3, coinsPerSecond: 50, owned: 0, description: 'Implement AI systems' },
+            
+            // Marketing Upgrades
+            { id: 'marketing1', name: 'Social Media', cost: 300, clickMultiplier: 1.2, owned: 0, description: 'Start social media marketing' },
+            { id: 'marketing2', name: 'TV Ads', cost: 3000, coinsPerSecond: 20, owned: 0, description: 'Launch TV ad campaign' },
+            { id: 'marketing3', name: 'Global Marketing', cost: 30000, clickMultiplier: 2, coinsPerSecond: 100, owned: 0, description: 'Expand marketing globally' },
+            
+            // Research Upgrades
+            { id: 'research1', name: 'R&D Lab', cost: 1500, coinsPerSecond: 10, owned: 0, description: 'Establish research lab' },
+            { id: 'research2', name: 'Innovation Center', cost: 15000, clickMultiplier: 2, coinsPerSecond: 40, owned: 0, description: 'Build innovation center' },
+            { id: 'research3', name: 'Future Tech', cost: 150000, clickMultiplier: 4, coinsPerSecond: 200, owned: 0, description: 'Develop future tech' },
+            
+            // Automation Upgrades
+            { id: 'auto1', name: 'Basic Automation', cost: 1000, coinsPerSecond: 8, owned: 0, description: 'Implement basic automation' },
+            { id: 'auto2', name: 'Smart Systems', cost: 10000, coinsPerSecond: 35, owned: 0, description: 'Install smart systems' },
+            { id: 'auto3', name: 'Full Automation', cost: 100000, coinsPerSecond: 150, owned: 0, description: 'Achieve full automation' },
+        ];
+
+        // Shop items for customization
+        let shopItems = [
+            { id: 'bg1', name: 'Night Theme', cost: 100, type: 'background', value: 'bg-gray-900', owned: false },
+            { id: 'bg2', name: 'Corporate Blue', cost: 500, type: 'background', value: 'bg-blue-900', owned: false },
+            { id: 'bg3', name: 'Success Green', cost: 1000, type: 'background', value: 'bg-green-900', owned: false },
+            { id: 'bg4', name: 'Royal Purple', cost: 2000, type: 'background', value: 'bg-purple-900', owned: false },
+            { id: 'text1', name: 'Golden Text', cost: 300, type: 'text', value: 'text-yellow-400', owned: false },
+            { id: 'text2', name: 'Neon Blue', cost: 800, type: 'text', value: 'text-blue-400', owned: false },
+            { id: 'text3', name: 'Emerald Text', cost: 1500, type: 'text', value: 'text-emerald-400', owned: false },
+            { id: 'font1', name: 'Elegant Font', cost: 400, type: 'font', value: 'font-serif', owned: false },
+            { id: 'font2', name: 'Modern Font', cost: 900, type: 'font', value: 'font-mono', owned: false }
+        ];
+
+        // Load game data from localStorage
+        function loadGameData() {
+            const savedData = localStorage.getItem('businessTycoonSave');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                businessName = data.businessName;
+                coins = data.coins;
+                upgrades = data.upgrades;
+                shopItems = data.shopItems;
+                customizations = data.customizations;
+                giftCards = new Map(data.giftCards);
+
+                // Apply saved customizations
+                document.body.classList.remove('bg-gray-900', 'text-white', 'font-sans');
+                document.body.classList.add(
+                    customizations.backgroundColor,
+                    customizations.textColor,
+                    customizations.fontFamily
+                );
+
+                // Show main game if business name exists
+                if (businessName) {
+                    document.getElementById('businessNameDisplay').textContent = businessName;
+                    document.getElementById('setup').classList.add('hidden');
+                    document.getElementById('mainGame').classList.remove('hidden');
+                    startGame();
+                }
+            }
+        }
+
+        // Save game data to localStorage
+        function saveGameData() {
+            const gameData = {
+                businessName,
+                coins,
+                upgrades,
+                shopItems,
+                customizations,
+                giftCards: Array.from(giftCards.entries())
+            };
+            localStorage.setItem('businessTycoonSave', JSON.stringify(gameData));
+        }
+
+        // Sound functions
+        function playSound(id) {
+            const sound = document.getElementById(id);
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log('Sound play failed:', e));
+        }
+
+        function setBusinessName() {
+            const input = document.getElementById('businessNameInput');
+            if (input.value.trim()) {
+                businessName = input.value.trim();
+                document.getElementById('businessNameDisplay').textContent = businessName;
+                document.getElementById('setup').classList.add('hidden');
+                document.getElementById('mainGame').classList.remove('hidden');
+                startGame();
+                playSound('purchaseSound');
+                saveGameData(); // Save after setting business name
+            }
+        }
+
+        function updateCoins(amount) {
+            coins += amount;
+            document.getElementById('coinDisplay').textContent = Math.floor(coins);
+            document.getElementById('cpsDisplay').textContent = `${getPassiveIncome().toFixed(1)} CPS`;
+            updateUpgradeButtons();
+            updateShopButtons();
+            saveGameData(); // Save after updating coins
+        }
+
+        function generateRandomCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
+            return Array.from({length: 25}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+        }
+
+        function generateGiftCard() {
+            const amount = parseInt(document.getElementById('giftAmountInput').value);
+            if (amount > 0) {
+                const code = generateRandomCode();
+                giftCards.set(code, amount);
+                document.getElementById('generatedCode').textContent = code;
+                showMessage('Gift card generated!', 'bg-green-600');
+                playSound('purchaseSound');
+                saveGameData(); // Save after generating gift card
+            }
+        }
+
+        function redeemGiftCard() {
+            const code = document.getElementById('giftCodeInput').value;
+            if (giftCards.has(code)) {
+                const amount = giftCards.get(code);
+                updateCoins(amount);
+                giftCards.delete(code);
+                document.getElementById('giftCodeInput').value = '';
+                showMessage(`Redeemed ${amount} coins!`, 'bg-green-600');
+                playSound('purchaseSound');
+                saveGameData(); // Save after redeeming gift card
+            } else {
+                showMessage('Invalid gift card code', 'bg-red-600');
+                playSound('errorSound');
+            }
+        }
+
+        function showMessage(text, bgColor) {
+            const messageBox = document.getElementById('messageBox');
+            const message = document.createElement('div');
+            message.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg mb-2`;
+            message.textContent = text;
+            messageBox.appendChild(message);
+            setTimeout(() => message.remove(), 3000);
+        }
+
+        function getClickValue() {
+            let multiplier = 1;
+            upgrades.forEach(upgrade => {
+                if (upgrade.clickMultiplier && upgrade.owned) {
+                    multiplier *= upgrade.clickMultiplier;
+                }
+            });
+            return multiplier;
+        }
+
+        function getPassiveIncome() {
+            let income = 0;
+            upgrades.forEach(upgrade => {
+                if (upgrade.coinsPerSecond) {
+                    income += upgrade.coinsPerSecond * upgrade.owned;
+                }
+            });
+            return income;
+        }
+
+        function updateUpgradeButtons() {
+            const upgradesList = document.getElementById('upgradesList');
+            upgradesList.innerHTML = '';
+            
+            upgrades.forEach(upgrade => {
+                const button = document.createElement('div');
+                button.className = `bg-gray-700 p-4 rounded-lg ${coins >= upgrade.cost ? 'hover:bg-gray-600' : 'opacity-50'} transition-all`;
+                button.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-bold">${upgrade.name}</h4>
+                            <p class="text-sm text-gray-400">${upgrade.description}</p>
+                            <p class="text-xs text-gray-500">Owned: ${upgrade.owned}</p>
+                        </div>
+                        <button onclick="buyUpgrade('${upgrade.id}')" 
+                                class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors"
+                                ${coins < upgrade.cost ? 'disabled' : ''}>
+                            ${upgrade.cost} 💰
+                        </button>
+                    </div>
+                `;
+                upgradesList.appendChild(button);
+            });
+        }
+
+        function updateShopButtons() {
+            const shopList = document.getElementById('shopList');
+            shopList.innerHTML = '';
+            
+            shopItems.forEach(item => {
+                if (!item.owned) {
+                    const button = document.createElement('div');
+                    button.className = `bg-gray-700 p-4 rounded-lg ${coins >= item.cost ? 'hover:bg-gray-600' : 'opacity-50'} transition-all`;
+                    button.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold">${item.name}</h4>
+                                <p class="text-sm text-gray-400">Customize your empire's look</p>
+                            </div>
+                            <button onclick="buyShopItem('${item.id}')" 
+                                    class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg transition-colors"
+                                    ${coins < item.cost ? 'disabled' : ''}>
+                                ${item.cost} 💰
+                            </button>
+                        </div>
+                    `;
+                    shopList.appendChild(button);
+                }
+            });
+        }
+
+        function buyUpgrade(upgradeId) {
+            const upgrade = upgrades.find(u => u.id === upgradeId);
+            if (upgrade && coins >= upgrade.cost) {
+                updateCoins(-upgrade.cost);
+                upgrade.owned++;
+                upgrade.cost = Math.floor(upgrade.cost * 1.5);
+                updateUpgradeButtons();
+                showMessage(`Purchased ${upgrade.name}!`, 'bg-green-600');
+                playSound('purchaseSound');
+                saveGameData(); // Save after buying upgrade
+            } else {
+                playSound('errorSound');
+            }
+        }
+
+        function buyShopItem(itemId) {
+            const item = shopItems.find(i => i.id === itemId);
+            if (item && coins >= item.cost && !item.owned) {
+                updateCoins(-item.cost);
+                item.owned = true;
+                applyCustomization(item);
+                updateShopButtons();
+                showMessage(`Purchased ${item.name}!`, 'bg-green-600');
+                playSound('purchaseSound');
+                saveGameData(); // Save after buying shop item
+            } else {
+                playSound('errorSound');
+            }
+        }
+
+        function applyCustomization(item) {
+            const body = document.body;
+            if (item.type === 'background') {
+                body.classList.remove(customizations.backgroundColor);
+                body.classList.add(item.value);
+                customizations.backgroundColor = item.value;
+            } else if (item.type === 'text') {
+                body.classList.remove(customizations.textColor);
+                body.classList.add(item.value);
+                customizations.textColor = item.value;
+            } else if (item.type === 'font') {
+                body.classList.remove(customizations.fontFamily);
+                body.classList.add(item.value);
+                customizations.fontFamily = item.value;
+            }
+            saveGameData(); // Save after applying customization
+        }
+
+        // Keyboard event listener for secret admin code
+        document.addEventListener('keydown', (e) => {
+            secretCode += e.key.toLowerCase();
+            if (secretCode.length > 11) {
+                secretCode = secretCode.substring(1);
+            }
+            if (secretCode.includes('opensesame')) {
+                document.getElementById('adminPanel').classList.remove('hidden');
+                showMessage('Admin mode activated!', 'bg-purple-600');
+                playSound('purchaseSound');
+                secretCode = '';
+            }
+        });
+
+        function startGame() {
+            updateUpgradeButtons();
+            updateShopButtons();
+            
+            // Click handler
+            document.getElementById('clickArea').addEventListener('click', (e) => {
+                updateCoins(getClickValue());
+                playSound('clickSound');
+                
+                // Create floating number animation
+                const floater = document.createElement('div');
+                floater.textContent = `+${getClickValue()}`;
+                floater.style.position = 'absolute';
+                floater.style.left = `${e.pageX}px`;
+                floater.style.top = `${e.pageY}px`;
+                floater.style.pointerEvents = 'none';
+                floater.className = 'text-yellow-400 font-bold';
+                document.body.appendChild(floater);
+                
+                // Animate the number floating up
+                floater.animate([
+                    { transform: 'translateY(0)', opacity: 1 },
+                    { transform: 'translateY(-50px)', opacity: 0 }
+                ], {
+                    duration: 1000,
+                    easing: 'ease-out'
+                }).onfinish = () => floater.remove();
+            });
+
+            // Passive income
+            setInterval(() => {
+                const income = getPassiveIncome();
+                if (income > 0) {
+                    updateCoins(income);
+                }
+            }, 1000);
+
+            // Auto-save every minute
+            setInterval(saveGameData, 60000);
+        }
+
+        // Load saved game data when the page loads
+        window.addEventListener('load', loadGameData);
+    </script>
+</body>
+</html>
