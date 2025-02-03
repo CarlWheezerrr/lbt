@@ -3,9 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lachlan's Buisness Tycoon</title>
+    <title>Lachlan's Business Tycoon</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style id="customStyles"></style>
+    <style>
+        /* Prevent text selection */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Allow text selection in input fields */
+        input {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        .equipped {
+            border: 2px solid #4CAF50;
+            position: relative;
+        }
+
+        .equipped::after {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        /* Floating number animation */
+        @keyframes float-up {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+        }
+
+        .float-number {
+            animation: float-up 1s ease-out forwards;
+            pointer-events: none;
+            position: absolute;
+        }
+    </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
     <!-- Audio elements -->
@@ -15,7 +63,7 @@
 
     <div id="game" class="container mx-auto px-4 py-8 max-w-6xl">
         <div id="setup" class="text-center mb-8">
-            <h1 class="text-6xl font-bold mb-6 text-blue-400">Lachlan's Buisness Tycoon</h1>
+            <h1 class="text-6xl font-bold mb-6 text-blue-400">Lachlan's Business Tycoon</h1>
             <div id="nameInput" class="mb-8">
                 <input type="text" id="businessNameInput" placeholder="Enter your business name" class="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500 w-64">
                 <button onclick="setBusinessName()" class="ml-2 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg transition-colors">Start Empire</button>
@@ -27,7 +75,7 @@
             <div class="flex justify-between items-center mb-8 bg-gray-800 p-4 rounded-lg shadow-lg">
                 <div>
                     <h2 id="businessNameDisplay" class="text-3xl font-bold text-blue-400"></h2>
-                    <p class="text-gray-400">Lachlan's Buisness Tycoon</p>
+                    <p class="text-gray-400">Lachlan's Business Tycoon</p>
                 </div>
                 <div class="flex items-center gap-4">
                     <div class="text-2xl font-bold text-yellow-400 animate-pulse">
@@ -79,18 +127,55 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getFirestore, collection, addDoc, query, where, getDocs, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        // Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBCHKKGQlEXNAGvk9a5NK7vadyOou2Rgd8",
+  authDomain: "hhtf-a3869.firebaseapp.com",
+  databaseURL: "https://hhtf-a3869-default-rtdb.firebaseio.com",
+  projectId: "hhtf-a3869",
+  storageBucket: "hhtf-a3869.firebasestorage.app",
+  messagingSenderId: "867975830466",
+  appId: "1:867975830466:web:06bcb605b33629b905d45b",
+  measurementId: "G-0Z07RMDMLX"
+};
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Make Firebase functions globally available
+        window.db = db;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.query = query;
+        window.where = where;
+        window.getDocs = getDocs;
+        window.deleteDoc = deleteDoc;
+        window.doc = doc;
+    </script>
+
     <script>
         let businessName = '';
         let coins = 0;
-        let giftCards = new Map();
         let secretCode = '';
         let customizations = {
             backgroundColor: 'bg-gray-900',
             textColor: 'text-white',
             fontFamily: 'font-sans'
         };
+        let equippedItems = {
+            background: null,
+            text: null,
+            font: null
+        };
 
-        // Expanded upgrades list
+        // Complete upgrades list
         let upgrades = [
             // Passive Income Upgrades
             { id: 'passive1', name: 'Intern', cost: 10, coinsPerSecond: 0.1, owned: 0, description: 'Hire an intern to generate 0.1 coins/sec' },
@@ -130,20 +215,20 @@
             // Automation Upgrades
             { id: 'auto1', name: 'Basic Automation', cost: 1000, coinsPerSecond: 8, owned: 0, description: 'Implement basic automation' },
             { id: 'auto2', name: 'Smart Systems', cost: 10000, coinsPerSecond: 35, owned: 0, description: 'Install smart systems' },
-            { id: 'auto3', name: 'Full Automation', cost: 100000, coinsPerSecond: 150, owned: 0, description: 'Achieve full automation' },
+            { id: 'auto3', name: 'Full Automation', cost: 100000, coinsPerSecond: 150, owned: 0, description: 'Achieve full automation' }
         ];
 
-        // Shop items for customization
+        // Shop items with equipped state
         let shopItems = [
-            { id: 'bg1', name: 'Night Theme', cost: 100, type: 'background', value: 'bg-gray-900', owned: false },
-            { id: 'bg2', name: 'Corporate Blue', cost: 500, type: 'background', value: 'bg-blue-900', owned: false },
-            { id: 'bg3', name: 'Success Green', cost: 1000, type: 'background', value: 'bg-green-900', owned: false },
-            { id: 'bg4', name: 'Royal Purple', cost: 2000, type: 'background', value: 'bg-purple-900', owned: false },
-            { id: 'text1', name: 'Golden Text', cost: 300, type: 'text', value: 'text-yellow-400', owned: false },
-            { id: 'text2', name: 'Neon Blue', cost: 800, type: 'text', value: 'text-blue-400', owned: false },
-            { id: 'text3', name: 'Emerald Text', cost: 1500, type: 'text', value: 'text-emerald-400', owned: false },
-            { id: 'font1', name: 'Elegant Font', cost: 400, type: 'font', value: 'font-serif', owned: false },
-            { id: 'font2', name: 'Modern Font', cost: 900, type: 'font', value: 'font-mono', owned: false }
+            { id: 'bg1', name: 'Night Theme', cost: 100, type: 'background', value: 'bg-gray-900', owned: false, equipped: false },
+            { id: 'bg2', name: 'Corporate Blue', cost: 500, type: 'background', value: 'bg-blue-900', owned: false, equipped: false },
+            { id: 'bg3', name: 'Success Green', cost: 1000, type: 'background', value: 'bg-green-900', owned: false, equipped: false },
+            { id: 'bg4', name: 'Royal Purple', cost: 2000, type: 'background', value: 'bg-purple-900', owned: false, equipped: false },
+            { id: 'text1', name: 'Golden Text', cost: 300, type: 'text', value: 'text-yellow-400', owned: false, equipped: false },
+            { id: 'text2', name: 'Neon Blue', cost: 800, type: 'text', value: 'text-blue-400', owned: false, equipped: false },
+            { id: 'text3', name: 'Emerald Text', cost: 1500, type: 'text', value: 'text-emerald-400', owned: false, equipped: false },
+            { id: 'font1', name: 'Elegant Font', cost: 400, type: 'font', value: 'font-serif', owned: false, equipped: false },
+            { id: 'font2', name: 'Modern Font', cost: 900, type: 'font', value: 'font-mono', owned: false, equipped: false }
         ];
 
         // Load game data from localStorage
@@ -156,15 +241,14 @@
                 upgrades = data.upgrades;
                 shopItems = data.shopItems;
                 customizations = data.customizations;
-                giftCards = new Map(data.giftCards);
+                equippedItems = data.equippedItems || {
+                    background: null,
+                    text: null,
+                    font: null
+                };
 
                 // Apply saved customizations
-                document.body.classList.remove('bg-gray-900', 'text-white', 'font-sans');
-                document.body.classList.add(
-                    customizations.backgroundColor,
-                    customizations.textColor,
-                    customizations.fontFamily
-                );
+                applyAllCustomizations();
 
                 // Show main game if business name exists
                 if (businessName) {
@@ -184,9 +268,20 @@
                 upgrades,
                 shopItems,
                 customizations,
-                giftCards: Array.from(giftCards.entries())
+                equippedItems
             };
             localStorage.setItem('businessTycoonSave', JSON.stringify(gameData));
+        }
+
+        // Apply all saved customizations
+        function applyAllCustomizations() {
+            const body = document.body;
+            body.classList.remove('bg-gray-900', 'text-white', 'font-sans');
+            body.classList.add(
+                customizations.backgroundColor,
+                customizations.textColor,
+                customizations.fontFamily
+            );
         }
 
         // Sound functions
@@ -205,7 +300,7 @@
                 document.getElementById('mainGame').classList.remove('hidden');
                 startGame();
                 playSound('purchaseSound');
-                saveGameData(); // Save after setting business name
+                saveGameData();
             }
         }
 
@@ -215,40 +310,68 @@
             document.getElementById('cpsDisplay').textContent = `${getPassiveIncome().toFixed(1)} CPS`;
             updateUpgradeButtons();
             updateShopButtons();
-            saveGameData(); // Save after updating coins
+            saveGameData();
         }
 
-        function generateRandomCode() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
-            return Array.from({length: 25}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-        }
-
-        function generateGiftCard() {
+        async function generateGiftCard() {
             const amount = parseInt(document.getElementById('giftAmountInput').value);
             if (amount > 0) {
                 const code = generateRandomCode();
-                giftCards.set(code, amount);
-                document.getElementById('generatedCode').textContent = code;
-                showMessage('Gift card generated!', 'bg-green-600');
-                playSound('purchaseSound');
-                saveGameData(); // Save after generating gift card
+                try {
+                    await addDoc(collection(db, "giftCards"), {
+                        code: code,
+                        amount: amount,
+                        used: false,
+                        createdAt: new Date().toISOString()
+                    });
+                    document.getElementById('generatedCode').textContent = code;
+                    showMessage('Gift card generated!', 'bg-green-600');
+                    playSound('purchaseSound');
+                } catch (error) {
+                    console.error("Error generating gift card:", error);
+                    showMessage('Failed to generate gift card', 'bg-red-600');
+                    playSound('errorSound');
+                }
             }
         }
 
-        function redeemGiftCard() {
+        async function redeemGiftCard() {
             const code = document.getElementById('giftCodeInput').value;
-            if (giftCards.has(code)) {
-                const amount = giftCards.get(code);
-                updateCoins(amount);
-                giftCards.delete(code);
-                document.getElementById('giftCodeInput').value = '';
-                showMessage(`Redeemed ${amount} coins!`, 'bg-green-600');
-                playSound('purchaseSound');
-                saveGameData(); // Save after redeeming gift card
-            } else {
-                showMessage('Invalid gift card code', 'bg-red-600');
+            try {
+                const giftCardQuery = query(
+                    collection(db, "giftCards"),
+                    where("code", "==", code),
+                    where("used", "==", false)
+                );
+                
+                const querySnapshot = await getDocs(giftCardQuery);
+                
+                if (!querySnapshot.empty) {
+                    const giftCard = querySnapshot.docs[0];
+                    const giftCardData = giftCard.data();
+                    
+                    // Update the gift card to mark it as used
+                    await deleteDoc(doc(db, "giftCards", giftCard.id));
+                    
+                    // Add coins to the player
+                    updateCoins(giftCardData.amount);
+                    document.getElementById('giftCodeInput').value = '';
+                    showMessage(`Redeemed ${giftCardData.amount} coins!`, 'bg-green-600');
+                    playSound('purchaseSound');
+                } else {
+                    showMessage('Invalid or already used gift card code', 'bg-red-600');
+                    playSound('errorSound');
+                }
+            } catch (error) {
+                console.error("Error redeeming gift card:", error);
+                showMessage('Failed to redeem gift card', 'bg-red-600');
                 playSound('errorSound');
             }
+        }
+
+        function generateRandomCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            return Array.from({length: 12}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
         }
 
         function showMessage(text, bgColor) {
@@ -310,24 +433,37 @@
             shopList.innerHTML = '';
             
             shopItems.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = `bg-gray-700 p-4 rounded-lg ${item.equipped ? 'equipped' : ''} ${!item.owned && coins >= item.cost ? 'hover:bg-gray-600' : !item.owned ? 'opacity-50' : ''} transition-all`;
+                
+                let buttonHtml = '';
                 if (!item.owned) {
-                    const button = document.createElement('div');
-                    button.className = `bg-gray-700 p-4 rounded-lg ${coins >= item.cost ? 'hover:bg-gray-600' : 'opacity-50'} transition-all`;
-                    button.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h4 class="font-bold">${item.name}</h4>
-                                <p class="text-sm text-gray-400">Customize your empire's look</p>
-                            </div>
-                            <button onclick="buyShopItem('${item.id}')" 
-                                    class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg transition-colors"
-                                    ${coins < item.cost ? 'disabled' : ''}>
-                                ${item.cost} 💰
-                            </button>
-                        </div>
+                    buttonHtml = `
+                        <button onclick="buyShopItem('${item.id}')" 
+                                class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg transition-colors"
+                                ${coins < item.cost ? 'disabled' : ''}>
+                            ${item.cost} 💰
+                        </button>
                     `;
-                    shopList.appendChild(button);
+                } else if (!item.equipped) {
+                    buttonHtml = `
+                        <button onclick="equipItem('${item.id}')"
+                                class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors">
+                            Equip
+                        </button>
+                    `;
                 }
+
+                itemElement.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-bold">${item.name}</h4>
+                            <p class="text-sm text-gray-400">Customize your empire's look</p>
+                        </div>
+                        ${buttonHtml}
+                    </div>
+                `;
+                shopList.appendChild(itemElement);
             });
         }
 
@@ -340,7 +476,7 @@
                 updateUpgradeButtons();
                 showMessage(`Purchased ${upgrade.name}!`, 'bg-green-600');
                 playSound('purchaseSound');
-                saveGameData(); // Save after buying upgrade
+                saveGameData();
             } else {
                 playSound('errorSound');
             }
@@ -351,13 +487,35 @@
             if (item && coins >= item.cost && !item.owned) {
                 updateCoins(-item.cost);
                 item.owned = true;
-                applyCustomization(item);
                 updateShopButtons();
                 showMessage(`Purchased ${item.name}!`, 'bg-green-600');
                 playSound('purchaseSound');
-                saveGameData(); // Save after buying shop item
+                saveGameData();
             } else {
                 playSound('errorSound');
+            }
+        }
+
+        function equipItem(itemId) {
+            const item = shopItems.find(i => i.id === itemId);
+            if (item && item.owned) {
+                // Unequip any currently equipped item of the same type
+                shopItems.forEach(i => {
+                    if (i.type === item.type) {
+                        i.equipped = false;
+                    }
+                });
+                
+                // Equip the new item
+                item.equipped = true;
+                equippedItems[item.type] = item.value;
+                
+                // Apply the customization
+                applyCustomization(item);
+                updateShopButtons();
+                showMessage(`Equipped ${item.name}!`, 'bg-green-600');
+                playSound('purchaseSound');
+                saveGameData();
             }
         }
 
@@ -376,7 +534,6 @@
                 body.classList.add(item.value);
                 customizations.fontFamily = item.value;
             }
-            saveGameData(); // Save after applying customization
         }
 
         // Keyboard event listener for secret admin code
@@ -409,17 +566,10 @@
                 floater.style.left = `${e.pageX}px`;
                 floater.style.top = `${e.pageY}px`;
                 floater.style.pointerEvents = 'none';
-                floater.className = 'text-yellow-400 font-bold';
+                floater.className = 'text-yellow-400 font-bold float-number';
                 document.body.appendChild(floater);
                 
-                // Animate the number floating up
-                floater.animate([
-                    { transform: 'translateY(0)', opacity: 1 },
-                    { transform: 'translateY(-50px)', opacity: 0 }
-                ], {
-                    duration: 1000,
-                    easing: 'ease-out'
-                }).onfinish = () => floater.remove();
+                setTimeout(() => floater.remove(), 1000);
             });
 
             // Passive income
