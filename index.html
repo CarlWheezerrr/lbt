@@ -6,7 +6,6 @@
     <title>Lachlan's Business Tycoon</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Prevent text selection */
         * {
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -14,7 +13,6 @@
             user-select: none;
         }
         
-        /* Allow text selection in input fields */
         input {
             -webkit-user-select: text;
             -moz-user-select: text;
@@ -36,7 +34,6 @@
             font-weight: bold;
         }
 
-        /* Floating number animation */
         @keyframes float-up {
             from {
                 transform: translateY(0);
@@ -53,10 +50,35 @@
             pointer-events: none;
             position: absolute;
         }
+
+          /* Updated purchase button styles */
+        .purchase-button {
+            min-width: 90px;
+            padding: 0.5rem 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-left: 0.5rem;
+        }
+
+        /* Container for upgrade/shop items */
+        .upgrade-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .upgrade-info {
+            flex: 1;
+            min-width: 0;
+            padding-right: 0.5rem;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
-    <!-- Audio elements -->
     <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
     <audio id="purchaseSound" src="https://assets.mixkit.co/active_storage/sfx/2580/2580-preview.mp3" preload="auto"></audio>
     <audio id="errorSound" src="https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3" preload="auto"></audio>
@@ -71,7 +93,6 @@
         </div>
 
         <div id="mainGame" class="hidden">
-            <!-- Header Section -->
             <div class="flex justify-between items-center mb-8 bg-gray-800 p-4 rounded-lg shadow-lg">
                 <div>
                     <h2 id="businessNameDisplay" class="text-3xl font-bold text-blue-400"></h2>
@@ -88,9 +109,7 @@
                 </div>
             </div>
 
-            <!-- Main Content Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <!-- Upgrades Section -->
                 <div class="lg:col-span-2">
                     <div class="bg-gray-800 p-6 rounded-lg">
                         <h3 class="text-2xl font-bold mb-4 text-blue-400">Business Upgrades</h3>
@@ -98,14 +117,12 @@
                     </div>
                 </div>
 
-                <!-- Shop Section -->
                 <div>
                     <div class="bg-gray-800 p-6 rounded-lg mb-6">
                         <h3 class="text-2xl font-bold mb-4 text-blue-400">Customization Shop</h3>
                         <div id="shopList" class="space-y-4"></div>
                     </div>
 
-                    <!-- Gift Cards Section -->
                     <div class="bg-gray-800 p-6 rounded-lg">
                         <h3 class="text-2xl font-bold mb-4 text-blue-400">Gift Cards</h3>
                         <div class="space-y-4">
@@ -127,13 +144,12 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
     <script type="module">
         // Import Firebase
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
         import { getFirestore, collection, addDoc, query, where, getDocs, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
-        // Your web app's Firebase configuration
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBCHKKGQlEXNAGvk9a5NK7vadyOou2Rgd8",
             authDomain: "hhtf-a3869.firebaseapp.com",
@@ -161,7 +177,6 @@
     </script>
 
     <script>
-
         let businessName = '';
         let coins = 0;
         let secretCode = '';
@@ -176,7 +191,7 @@
             font: null
         };
 
-        // Complete upgrades list
+        // Game data
         let upgrades = [
             // Passive Income Upgrades
             { id: 'passive1', name: 'Intern', cost: 10, coinsPerSecond: 0.1, owned: 0, description: 'Hire for 0.1 coins/sec' },
@@ -202,13 +217,13 @@
             { id: 'tech1', name: 'Basic Computers', cost: 200, clickMultiplier: 1.5, owned: 0, description: 'Upgrade office computers' },
             { id: 'tech2', name: 'Server Infrastructure', cost: 2000, coinsPerSecond: 15, owned: 0, description: 'Install business servers' },
             { id: 'tech3', name: 'AI Integration', cost: 20000, clickMultiplier: 3, coinsPerSecond: 50, owned: 0, description: 'Implement AI systems' },
-            { id: 'tech4', name: 'Terry.', cost: 100000000, clickMultiplier: 10, coinsPerSecond: 50000, owned: 0, description: 'Terry.' },
+            { id: 'tech6', name: 'Terry.', cost: 100000000, clickMultiplier: 10, coinsPerSecond: 50000, owned: 0, description: 'Terry.' },
             
             // Marketing Upgrades
             { id: 'marketing1', name: 'Social Media', cost: 300, clickMultiplier: 1.2, owned: 0, description: 'Start social media marketing' },
             { id: 'marketing2', name: 'TV Ads', cost: 3000, coinsPerSecond: 20, owned: 0, description: 'Launch TV ad campaign' },
             { id: 'marketing3', name: 'Global Marketing', cost: 30000, clickMultiplier: 2, coinsPerSecond: 100, owned: 0, description: 'Expand marketing globally' },
-            { id: 'marketing44', name: 'Billboard Campains', cost: 10000, clickMultiplier: 4, coinsPerSecond: 300, owned: 0, description: 'Advertise with billboards' },
+            { id: 'marketing44', name: 'Billboard Campaigns', cost: 10000, clickMultiplier: 4, coinsPerSecond: 300, owned: 0, description: 'Advertise with billboards' },
             
             // Research Upgrades
             { id: 'research1', name: 'R&D Lab', cost: 1500, coinsPerSecond: 10, owned: 0, description: 'Establish research lab' },
@@ -220,16 +235,15 @@
             { id: 'auto1', name: 'Basic Automation', cost: 1000, coinsPerSecond: 8, owned: 0, description: 'Implement basic automation' },
             { id: 'auto2', name: 'Smart Systems', cost: 10000, coinsPerSecond: 35, owned: 0, description: 'Install smart systems' },
             { id: 'auto3', name: 'Full Automation', cost: 100000, coinsPerSecond: 800, owned: 0, description: 'Achieve full automation' },
-            { id: 'auto4', name: 'Factory Automation', cost: 1000000, coinsPerSecond: 5000, owned: 0, description: 'Factory full of robots' },
+            { id: 'auto4', name: 'Factory Automation', cost: 1000000, coinsPerSecond: 5000, owned: 0, description: 'Factory full of robots' }
         ];
 
-        // Shop items with equipped state
         let shopItems = [
             { id: 'bg1', name: 'Night Theme', cost: 100, type: 'background', value: 'bg-gray-900', owned: false, equipped: false },
             { id: 'bg2', name: 'Corporate Blue', cost: 500, type: 'background', value: 'bg-blue-900', owned: false, equipped: false },
             { id: 'bg3', name: 'Success Green', cost: 1000, type: 'background', value: 'bg-green-900', owned: false, equipped: false },
             { id: 'bg4', name: 'Royal Purple', cost: 2000, type: 'background', value: 'bg-purple-900', owned: false, equipped: false },
-            { id: 'bg5', name: 'Buisness Yellow', cost: 200000, type: 'background', value: 'bg-yellow-400', owned: false, equipped: false },
+            { id: 'bg5', name: 'Business Yellow', cost: 200000, type: 'background', value: 'bg-yellow-400', owned: false, equipped: false },
             { id: 'text1', name: 'Golden Text', cost: 300, type: 'text', value: 'text-yellow-400', owned: false, equipped: false },
             { id: 'text2', name: 'Neon Blue', cost: 800, type: 'text', value: 'text-blue-400', owned: false, equipped: false },
             { id: 'text3', name: 'Emerald Text', cost: 1500, type: 'text', value: 'text-emerald-400', owned: false, equipped: false },
@@ -238,99 +252,88 @@
         ];
 
         function migrateSaveData(savedData) {
-        // Merge upgrades - preserve owned status and cost from saved data
-        savedData.upgrades = upgrades.map(defaultUpgrade => {
-            const savedUpgrade = savedData.upgrades?.find(u => u.id === defaultUpgrade.id);
-            return savedUpgrade ? savedUpgrade : {
-                ...defaultUpgrade,
-                owned: 0,
-                cost: defaultUpgrade.cost
-            };
-        });
-
-        // Merge shop items - preserve owned and equipped status
-        savedData.shopItems = shopItems.map(defaultItem => {
-            const savedItem = savedData.shopItems?.find(i => i.id === defaultItem.id);
-            return savedItem ? savedItem : {
-                ...defaultItem,
-                owned: false,
-                equipped: false
-            };
-        });
-
-        // Ensure new properties exist
-        if (!savedData.equippedItems) {
-            savedData.equippedItems = {
-                background: null,
-                text: null,
-                font: null
-            };
-        }
-
-        return savedData;
-    }
-
-    function loadGameData() {
-        const savedData = localStorage.getItem('businessTycoonSave');
-        if (savedData) {
-            try {
-                let data = JSON.parse(savedData);
-                
-                // Migrate existing save data
-                data = migrateSaveData(data);
-                
-                // Update game state
-                businessName = data.businessName;
-                coins = data.coins;
-                upgrades = data.upgrades;
-                shopItems = data.shopItems;
-                customizations = data.customizations;
-                equippedItems = data.equippedItems;
-
-                // Apply customizations
-                applyAllCustomizations();
-
-                // Show main game if business name exists
-                if (businessName) {
-                    document.getElementById('businessNameDisplay').textContent = businessName;
-                    document.getElementById('setup').classList.add('hidden');
-                    document.getElementById('mainGame').classList.remove('hidden');
-                    startGame();
-                }
-            } catch (e) {
-                console.error('Error loading save data:', e);
-                // Don't remove save data on error, just use defaults
-                businessName = '';
-                coins = 0;
-                // Keep default upgrades and shop items
-                customizations = {
-                    backgroundColor: 'bg-gray-900',
-                    textColor: 'text-white',
-                    fontFamily: 'font-sans'
+            savedData.upgrades = upgrades.map(defaultUpgrade => {
+                const savedUpgrade = savedData.upgrades?.find(u => u.id === defaultUpgrade.id);
+                return savedUpgrade ? savedUpgrade : {
+                    ...defaultUpgrade,
+                    owned: 0,
+                    cost: defaultUpgrade.cost
                 };
-                equippedItems = {
+            });
+
+            savedData.shopItems = shopItems.map(defaultItem => {
+                const savedItem = savedData.shopItems?.find(i => i.id === defaultItem.id);
+                return savedItem ? savedItem : {
+                    ...defaultItem,
+                    owned: false,
+                    equipped: false
+                };
+            });
+
+            if (!savedData.equippedItems) {
+                savedData.equippedItems = {
                     background: null,
                     text: null,
                     font: null
                 };
             }
+
+            return savedData;
         }
-    }
 
-    function saveGameData() {
-        const gameData = {
-            businessName,
-            coins,
-            upgrades,
-            shopItems,
-            customizations,
-            equippedItems
-        };
-        
-        localStorage.setItem('businessTycoonSave', JSON.stringify(gameData));
-    }
+        function loadGameData() {
+            const savedData = localStorage.getItem('businessTycoonSave');
+            if (savedData) {
+                try {
+                    let data = JSON.parse(savedData);
+                    data = migrateSaveData(data);
+                    
+                    businessName = data.businessName;
+                    coins = data.coins;
+                    upgrades = data.upgrades;
+                    shopItems = data.shopItems;
+                    customizations = data.customizations;
+                    equippedItems = data.equippedItems;
 
-        // Apply all saved customizations
+                    applyAllCustomizations();
+
+                    if (businessName) {
+                        document.getElementById('businessNameDisplay').textContent = businessName;
+                        document.getElementById('setup').classList.add('hidden');
+                        document.getElementById('mainGame').classList.remove('hidden');
+                        startGame();
+                    }
+                } catch (e) {
+                    console.error('Error loading save data:', e);
+                    businessName = '';
+                    coins = 0;
+                    customizations = {
+                        backgroundColor: 'bg-gray-900',
+                        textColor: 'text-white',
+                        fontFamily: 'font-sans'
+                    };
+                    equippedItems = {
+                        background: null,
+                        text: null,
+                        font: null
+                    };
+                }
+            }
+        }
+
+        function saveGameData() {
+            const gameData = {
+                businessName,
+                coins,
+                upgrades,
+                shopItems,
+                customizations,
+                equippedItems
+            };
+            
+            localStorage.setItem('businessTycoonSave', JSON.stringify(gameData));
+        }
+
         function applyAllCustomizations() {
             const body = document.body;
             body.classList.remove('bg-gray-900', 'text-white', 'font-sans');
@@ -341,7 +344,6 @@
             );
         }
 
-        // Sound functions
         function playSound(id) {
             const sound = document.getElementById(id);
             sound.currentTime = 0;
@@ -407,10 +409,8 @@
                     const giftCard = querySnapshot.docs[0];
                     const giftCardData = giftCard.data();
                     
-                    // Update the gift card to mark it as used
                     await deleteDoc(doc(db, "giftCards", giftCard.id));
                     
-                    // Add coins to the player
                     updateCoins(giftCardData.amount);
                     document.getElementById('giftCodeInput').value = '';
                     showMessage(`Redeemed ${giftCardData.amount} coins!`, 'bg-green-600');
@@ -468,14 +468,14 @@
                 const button = document.createElement('div');
                 button.className = `bg-gray-700 p-4 rounded-lg ${coins >= upgrade.cost ? 'hover:bg-gray-600' : 'opacity-50'} transition-all`;
                 button.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <div>
+                    <div class="upgrade-container">
+                        <div class="upgrade-info">
                             <h4 class="font-bold">${upgrade.name}</h4>
                             <p class="text-sm text-gray-400">${upgrade.description}</p>
                             <p class="text-xs text-gray-500">Owned: ${upgrade.owned}</p>
                         </div>
                         <button onclick="buyUpgrade('${upgrade.id}')" 
-                                class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors"
+                                class="purchase-button bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors"
                                 ${coins < upgrade.cost ? 'disabled' : ''}>
                             ${upgrade.cost} 💰
                         </button>
@@ -497,7 +497,7 @@
                 if (!item.owned) {
                     buttonHtml = `
                         <button onclick="buyShopItem('${item.id}')" 
-                                class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg transition-colors"
+                                class="purchase-button bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg transition-colors"
                                 ${coins < item.cost ? 'disabled' : ''}>
                             ${item.cost} 💰
                         </button>
@@ -505,15 +505,15 @@
                 } else if (!item.equipped) {
                     buttonHtml = `
                         <button onclick="equipItem('${item.id}')"
-                                class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors">
+                                class="purchase-button bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors">
                             Equip
                         </button>
                     `;
                 }
 
                 itemElement.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <div>
+                    <div class="upgrade-container">
+                        <div class="upgrade-info">
                             <h4 class="font-bold">${item.name}</h4>
                             <p class="text-sm text-gray-400">Customize your empire's look</p>
                         </div>
@@ -556,18 +556,15 @@
         function equipItem(itemId) {
             const item = shopItems.find(i => i.id === itemId);
             if (item && item.owned) {
-                // Unequip any currently equipped item of the same type
                 shopItems.forEach(i => {
                     if (i.type === item.type) {
                         i.equipped = false;
                     }
                 });
                 
-                // Equip the new item
                 item.equipped = true;
                 equippedItems[item.type] = item.value;
                 
-                // Apply the customization
                 applyCustomization(item);
                 updateShopButtons();
                 showMessage(`Equipped ${item.name}!`, 'bg-green-600');
@@ -593,7 +590,6 @@
             }
         }
 
-        // Keyboard event listener for secret admin code
         document.addEventListener('keydown', (e) => {
             secretCode += e.key.toLowerCase();
             if (secretCode.length > 11) {
@@ -611,12 +607,10 @@
             updateUpgradeButtons();
             updateShopButtons();
             
-            // Click handler
             document.getElementById('clickArea').addEventListener('click', (e) => {
                 updateCoins(getClickValue());
                 playSound('clickSound');
                 
-                // Create floating number animation
                 const floater = document.createElement('div');
                 floater.textContent = `+${getClickValue()}`;
                 floater.style.position = 'absolute';
@@ -629,20 +623,25 @@
                 setTimeout(() => floater.remove(), 1000);
             });
 
-            // Passive income
             setInterval(() => {
                 const income = getPassiveIncome();
                 if (income > 0) {
-                    updateCoins(income);
+                     updateCoins(income);
                 }
             }, 1000);
 
-            // Auto-save every minute
             setInterval(saveGameData, 60000);
         }
 
-        // Load saved game data when the page loads
         window.addEventListener('load', loadGameData);
+
+        // Make functions globally available
+        window.setBusinessName = setBusinessName;
+        window.buyUpgrade = buyUpgrade;
+        window.buyShopItem = buyShopItem;
+        window.equipItem = equipItem;
+        window.generateGiftCard = generateGiftCard;
+        window.redeemGiftCard = redeemGiftCard;
     </script>
 </body>
 </html>
