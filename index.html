@@ -134,16 +134,16 @@
         import { getFirestore, collection, addDoc, query, where, getDocs, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
         // Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyBCHKKGQlEXNAGvk9a5NK7vadyOou2Rgd8",
-  authDomain: "hhtf-a3869.firebaseapp.com",
-  databaseURL: "https://hhtf-a3869-default-rtdb.firebaseio.com",
-  projectId: "hhtf-a3869",
-  storageBucket: "hhtf-a3869.firebasestorage.app",
-  messagingSenderId: "867975830466",
-  appId: "1:867975830466:web:06bcb605b33629b905d45b",
-  measurementId: "G-0Z07RMDMLX"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCHKKGQlEXNAGvk9a5NK7vadyOou2Rgd8",
+            authDomain: "hhtf-a3869.firebaseapp.com",
+            databaseURL: "https://hhtf-a3869-default-rtdb.firebaseio.com",
+            projectId: "hhtf-a3869",
+            storageBucket: "hhtf-a3869.firebasestorage.app",
+            messagingSenderId: "867975830466",
+            appId: "1:867975830466:web:06bcb605b33629b905d45b",
+            measurementId: "G-0Z07RMDMLX"
+        };
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -161,6 +161,35 @@ const firebaseConfig = {
     </script>
 
     <script>
+        // Previous variables and functions remain the same until updateUpgradeButtons
+
+        function updateUpgradeButtons() {
+            const upgradesList = document.getElementById('upgradesList');
+            upgradesList.innerHTML = '';
+            
+            upgrades.forEach(upgrade => {
+                const button = document.createElement('div');
+                button.className = `bg-gray-700 p-4 rounded-lg ${coins >= upgrade.cost ? 'hover:bg-gray-600' : 'opacity-50'} transition-all`;
+                button.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-grow">
+                            <h4 class="font-bold">${upgrade.name}</h4>
+                            <p class="text-sm text-gray-400">${upgrade.description}</p>
+                            <p class="text-xs text-gray-500">Owned: ${upgrade.owned}</p>
+                        </div>
+                        <div class="ml-4 flex-shrink-0">
+                            <button onclick="buyUpgrade('${upgrade.id}')" 
+                                    class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+                                    ${coins < upgrade.cost ? 'disabled' : ''}>
+                                ${upgrade.cost} 💰
+                            </button>
+                        </div>
+                    </div>
+                `;
+                upgradesList.appendChild(button);
+            });
+        }
+
         let businessName = '';
         let coins = 0;
         let secretCode = '';
