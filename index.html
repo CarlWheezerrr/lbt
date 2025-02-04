@@ -218,6 +218,7 @@ const firebaseConfig = {
             { id: 'auto2', name: 'Smart Systems', cost: 10000, coinsPerSecond: 35, owned: 0, description: 'Install smart systems' },
             { id: 'auto3', name: 'Full Automation', cost: 100000, coinsPerSecond: 800, owned: 0, description: 'Achieve full automation' },
             { id: 'auto4', name: 'Factory Automation', cost: 1000000, coinsPerSecond: 5000, owned: 0, description: 'Factory full of robots' },
+                { id: 'aut5', name: 'Worldwide Automation', cost: 10000000, coinsPerSecond: 10000, owned: 0, description: 'Have automation all around the world' },
         ];
 
         // Shop items with equipped state
@@ -234,23 +235,57 @@ const firebaseConfig = {
             { id: 'font2', name: 'Modern Font', cost: 900, type: 'font', value: 'font-mono', owned: false, equipped: false }
         ];
 
-        // Load game data from localStorage
-        function loadGameData() {
-            const savedData = localStorage.getItem('businessTycoonSave');
-            if (savedData) {
-                const data = JSON.parse(savedData);
+        function migrateSaveData(savedData) {
+        // Merge upgrades - preserve owned status and cost from saved data
+        savedData.upgrades = upgrades.map(defaultUpgrade => {
+            const savedUpgrade = savedData.upgrades?.find(u => u.id === defaultUpgrade.id);
+            return savedUpgrade ? savedUpgrade : {
+                ...defaultUpgrade,
+                owned: 0,
+                cost: defaultUpgrade.cost
+            };
+        });
+
+        // Merge shop items - preserve owned and equipped status
+        savedData.shopItems = shopItems.map(defaultItem => {
+            const savedItem = savedData.shopItems?.find(i => i.id === defaultItem.id);
+            return savedItem ? savedItem : {
+                ...defaultItem,
+                owned: false,
+                equipped: false
+            };
+        });
+
+        // Ensure new properties exist
+        if (!savedData.equippedItems) {
+            savedData.equippedItems = {
+                background: null,
+                text: null,
+                font: null
+            };
+        }
+
+        return savedData;
+    }
+
+    function loadGameData() {
+        const savedData = localStorage.getItem('businessTycoonSave');
+        if (savedData) {
+            try {
+                let data = JSON.parse(savedData);
+                
+                // Migrate existing save data
+                data = migrateSaveData(data);
+                
+                // Update game state
                 businessName = data.businessName;
                 coins = data.coins;
                 upgrades = data.upgrades;
                 shopItems = data.shopItems;
                 customizations = data.customizations;
-                equippedItems = data.equippedItems || {
-                    background: null,
-                    text: null,
-                    font: null
-                };
+                equippedItems = data.equippedItems;
 
-                // Apply saved customizations
+                // Apply customizations
                 applyAllCustomizations();
 
                 // Show main game if business name exists
@@ -260,21 +295,38 @@ const firebaseConfig = {
                     document.getElementById('mainGame').classList.remove('hidden');
                     startGame();
                 }
+            } catch (e) {
+                console.error('Error loading save data:', e);
+                // Don't remove save data on error, just use defaults
+                businessName = '';
+                coins = 0;
+                // Keep default upgrades and shop items
+                customizations = {
+                    backgroundColor: 'bg-gray-900',
+                    textColor: 'text-white',
+                    fontFamily: 'font-sans'
+                };
+                equippedItems = {
+                    background: null,
+                    text: null,
+                    font: null
+                };
             }
         }
+    }
 
-        // Save game data to localStorage
-        function saveGameData() {
-            const gameData = {
-                businessName,
-                coins,
-                upgrades,
-                shopItems,
-                customizations,
-                equippedItems
-            };
-            localStorage.setItem('businessTycoonSave', JSON.stringify(gameData));
-        }
+    function saveGameData() {
+        const gameData = {
+            businessName,
+            coins,
+            upgrades,
+            shopItems,
+            customizations,
+            equippedItems
+        };
+        
+        localStorage.setItem('businessTycoonSave', JSON.stringify(gameData));
+    }
 
         // Apply all saved customizations
         function applyAllCustomizations() {
