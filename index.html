@@ -76,6 +76,46 @@
             min-width: 0;
             padding-right: 0.5rem;
         }
+
+            /* Updated box styles */
+        .upgrade-box {
+            background-color: rgba(55, 65, 81, 0.8);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(75, 85, 99, 0.4);
+        }
+
+        .upgrade-box:hover {
+            background-color: rgba(75, 85, 99, 0.9);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .upgrade-box.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Compact text styles */
+        .upgrade-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.125rem;
+            color: #fff;
+        }
+
+        .upgrade-description {
+            font-size: 0.75rem;
+            color: #9CA3AF;
+            margin-bottom: 0.125rem;
+        }
+
+        .upgrade-owned {
+            font-size: 0.7rem;
+            color: #6B7280;
+        }
+      
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
@@ -200,7 +240,7 @@
             { id: 'passive4', name: 'Team Lead', cost: 1000, coinsPerSecond: 10, owned: 0, description: 'Hire for 10 coins/sec' },
             { id: 'passive5', name: 'Department Manager', cost: 5000, coinsPerSecond: 50, owned: 0, description: 'Hire for 50 coins/sec' },
             { id: 'passive6', name: 'Regional Director', cost: 25000, coinsPerSecond: 250, owned: 0, description: 'Hire for 250 coins/sec' },
-            { id: 'passive7', name: 'CEO', cost: 100000, coinsPerSecond: 1000, owned: 0, description: 'Hire a CEO for 1000 coins/sec' },
+            { id: 'passive8', name: 'CEO', cost: 100000, coinsPerSecond: 1000, owned: 0, description: 'Hire for 1000 coins/sec' },
             
             // Click Multiplier Upgrades
             { id: 'click1', name: 'Basic Training', cost: 15, clickMultiplier: 2, owned: 0, description: 'Double click value' },
