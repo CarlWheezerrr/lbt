@@ -161,36 +161,6 @@
     </script>
 
     <script>
-        // Previous variables and functions remain the same until updateUpgradeButtons
-
-      function updateUpgradeButtons() {
-            const upgradesList = document.getElementById('upgradesList');
-            upgradesList.innerHTML = '';
-            
-            upgrades.forEach(upgrade => {
-                const button = document.createElement('div');
-                button.className = `bg-gray-700 p-3 rounded-lg ${coins >= upgrade.cost ? 'hover:bg-gray-600' : 'opacity-50'} transition-all h-14 flex items-center`;
-                button.innerHTML = `
-                    <div class="flex justify-between items-center space-x-4 w-full">
-                        <div class="flex flex-col justify-center flex-1 min-w-0 h-full">
-                            <div class="flex items-center gap-2">
-                                <h4 class="font-bold text-sm truncate">${upgrade.name}</h4>
-                                <span class="text-xs text-gray-500">Owned: ${upgrade.owned}</span>
-                            </div>
-                            <p class="text-xs text-gray-400 truncate">${upgrade.description}</p>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <button onclick="buyUpgrade('${upgrade.id}')" 
-                                    class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors text-sm whitespace-nowrap"
-                                    ${coins < upgrade.cost ? 'disabled' : ''}>
-                                ${upgrade.cost} 💰
-                            </button>
-                        </div>
-                    </div>
-                `;
-                upgradesList.appendChild(button);
-            });
-        }
 
         let businessName = '';
         let coins = 0;
@@ -209,13 +179,13 @@
         // Complete upgrades list
         let upgrades = [
             // Passive Income Upgrades
-            { id: 'passive11', name: 'Intern', cost: 10, coinsPerSecond: 0.1, owned: 0, description: 'Hire for 0.1 coins/sec' },
-            { id: 'passive22', name: 'Junior Employee', cost: 50, coinsPerSecond: 0.5, owned: 0, description: 'Hire for 0.5 coins/sec' },
-            { id: 'passive33', name: 'Senior Employee', cost: 200, coinsPerSecond: 2, owned: 0, description: 'Hire for 2 coins/sec' },
-            { id: 'passive44', name: 'Team Lead', cost: 1000, coinsPerSecond: 10, owned: 0, description: 'Hire for 10 coins/sec' },
-            { id: 'passive55', name: 'Department Manager', cost: 5000, coinsPerSecond: 50, owned: 0, description: 'Hire a manager for 50 coins/sec' },
-            { id: 'passive66', name: 'Regional Director', cost: 25000, coinsPerSecond: 250, owned: 0, description: 'Hire a director for 250 coins/sec' },
-            { id: 'passive77', name: 'CEO', cost: 100000, coinsPerSecond: 1000, owned: 0, description: 'Hire a CEO for 1000 coins/sec' },
+            { id: 'passive1', name: 'Intern', cost: 10, coinsPerSecond: 0.1, owned: 0, description: 'Hire for 0.1 coins/sec' },
+            { id: 'passive2', name: 'Junior Employee', cost: 50, coinsPerSecond: 0.5, owned: 0, description: 'Hire for 0.5 coins/sec' },
+            { id: 'passive3', name: 'Senior Employee', cost: 200, coinsPerSecond: 2, owned: 0, description: 'Hire for 2 coins/sec' },
+            { id: 'passive4', name: 'Team Lead', cost: 1000, coinsPerSecond: 10, owned: 0, description: 'Hire for 10 coins/sec' },
+            { id: 'passive5', name: 'Department Manager', cost: 5000, coinsPerSecond: 50, owned: 0, description: 'Hire for 50 coins/sec' },
+            { id: 'passive6', name: 'Regional Director', cost: 25000, coinsPerSecond: 250, owned: 0, description: 'Hire for 250 coins/sec' },
+            { id: 'passive7', name: 'CEO', cost: 100000, coinsPerSecond: 1000, owned: 0, description: 'Hire a CEO for 1000 coins/sec' },
             
             // Click Multiplier Upgrades
             { id: 'click1', name: 'Basic Training', cost: 15, clickMultiplier: 2, owned: 0, description: 'Double click value' },
